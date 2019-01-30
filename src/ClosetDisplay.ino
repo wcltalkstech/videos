@@ -21,7 +21,7 @@ void setup() {
   display.println("WAITING");
   display.display();
 
-  Particle.subscribe("newTemp", showTemp);
+  Mesh.subscribe("newTemp", showTemp);
 }
 
 // loop() runs over and over again, as quickly as it can execute.
