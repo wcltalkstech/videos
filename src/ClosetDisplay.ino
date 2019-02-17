@@ -1,15 +1,20 @@
 SYSTEM_MODE(MANUAL);
 SYSTEM_THREAD(ENABLED);
 
+#include "MQTT.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_SSD1306.h"
 
 #define TEMP_DATA_SIZE 10
+#define MQTT_CLIENT_NAME "argonTempDisplay"
 #define QUEUE_SIZE 10
 #define OLED_RESET D4
 #define TIME_STRING_SIZE 10
 #define DATA_IS_OLD 10000 // no update after these number of milliseconds
 
+void callback(char* topic, byte* payload, unsigned int length) {}
+
+MQTT client("test.mosquitto.org", 1883, callback);
 Adafruit_SSD1306 display(OLED_RESET);
 
 unsigned long timeOfLastUpdate;
@@ -24,6 +29,9 @@ void sendToCloud(void *arg) {
   char data[TEMP_DATA_SIZE];
   while (1) {
     os_queue_take(queue, &data, 100000, 0);
+    if (client.isConnected()) {
+      client.publish("wcl/ArgonDisplay", data);
+    }
     if (Particle.connected()) {
       Particle.publish("temperature", data);
     }
@@ -91,6 +99,12 @@ void setup() {
   display.clearDisplay();
   displayMessage(2, 0, "Temp...");
 
+  client.connect(MQTT_CLIENT_NAME);
+
+  if (client.isConnected()) {
+      client.publish("wcl/ArgonDisplay","hello world!");
+  }
+
   os_mutex_create(&mutex);
   os_queue_create(&queue, TEMP_DATA_SIZE, QUEUE_SIZE, NULL);
 
@@ -109,5 +123,10 @@ void loop() {
       display.setCursor(90, 0);
       display.println("OLD");
       display.display();
+  }
+  if (!client.isConnected()) {
+    client.connect(MQTT_CLIENT_NAME);
+  } else {
+    client.loop();
   }
 }
