@@ -11,6 +11,7 @@ SYSTEM_THREAD(ENABLED);
 #define MQTT_CLIENT_NAME "argonTempDisplay"
 #define QUEUE_SIZE 10
 #define TRIGGER_WDT_BTN D3
+#define MESSAGE_LED A2
 #define PETTING_OFF A1
 #define TIME_STRING_SIZE 10
 #define DATA_IS_OLD 10000 // no update after these number of milliseconds
@@ -48,9 +49,9 @@ void sendToCloud(void *arg) {
 void messageLED(void *arg) {
   while (1) {
     os_mutex_lock(mutex);
-    digitalWrite(D5, HIGH);
+    digitalWrite(MESSAGE_LED, HIGH);
     delay(2000);
-    digitalWrite(D5, LOW);
+    digitalWrite(MESSAGE_LED, LOW);
   }
 }
 
@@ -78,9 +79,9 @@ void showTemp(const char *event, const char *data)
 void setup() {
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
-  pinMode(D5, OUTPUT);
+  pinMode(MESSAGE_LED, OUTPUT);
   pinMode(PETTING_OFF, OUTPUT);
-  digitalWrite(D5, LOW);
+  digitalWrite(MESSAGE_LED, LOW);
   digitalWrite(PETTING_OFF, LOW);
 
   pinMode(TRIGGER_WDT_BTN, INPUT);
