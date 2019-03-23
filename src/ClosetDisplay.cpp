@@ -30,7 +30,8 @@ SYSTEM_THREAD(ENABLED);
 
 void callback(char* topic, byte* payload, unsigned int length) {}
 
-MQTT client("lab.thewcl.com", 1883, callback);
+byte server[] = { 157,230,226,82 };
+MQTT client(server, 1883, callback);
 Adafruit_SSD1306 display(D18);
 
 WCL_WatchDog wd;
@@ -48,7 +49,7 @@ void sendToCloud(void *arg) {
   while (1) {
     os_queue_take(queue, &data, CONCURRENT_WAIT_FOREVER, 0);
     if (client.isConnected()) {
-      client.publish("wcl/ArgonDisplay", data);
+      client.publish("wcltalkstech/ArgonDisplay", data);
     }
     if (Particle.connected()) {
       Particle.publish("temperature", data);
