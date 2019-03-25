@@ -1,6 +1,5 @@
 #include "application.h"
 #line 1 "/Users/kevinmcquown/Dropbox/WCL/wcltalkstech/TempSensorProject/ClosetDisplay/src/ClosetDisplay.ino"
-void callback(char* topic, byte* payload, unsigned int length);
 void sendToCloud(void *arg);
 void messageLED(void *arg);
 void displayMessage(uint8_t textSize, uint8_t lineNumber, const char *data);
@@ -11,7 +10,6 @@ void loop();
 SYSTEM_MODE(MANUAL);
 SYSTEM_THREAD(ENABLED);
 
-#include "MQTT.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_SSD1306.h"
 
@@ -28,10 +26,6 @@ SYSTEM_THREAD(ENABLED);
 
 #define WATCHDOG_TIMEOUT_MS 30000
 
-void callback(char* topic, byte* payload, unsigned int length) {}
-
-byte server[] = { 157,230,226,82 };
-MQTT client(server, 1883, callback);
 Adafruit_SSD1306 display(D18);
 
 WCL_WatchDog wd;
@@ -48,9 +42,6 @@ void sendToCloud(void *arg) {
   char data[TEMP_DATA_SIZE];
   while (1) {
     os_queue_take(queue, &data, CONCURRENT_WAIT_FOREVER, 0);
-    if (client.isConnected()) {
-      client.publish("wcltalkstech/ArgonDisplay", data);
-    }
     if (Particle.connected()) {
       Particle.publish("temperature", data);
     }
@@ -157,10 +148,5 @@ void loop() {
       display.setCursor(90, 0);
       display.println("OLD");
       display.display();
-  }
-  if (!client.isConnected()) {
-    client.connect(MQTT_CLIENT_NAME);
-  } else {
-    client.loop();
   }
 }
