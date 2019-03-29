@@ -1,37 +1,38 @@
 SYSTEM_MODE(MANUAL);
 SYSTEM_THREAD(ENABLED);
-
-#define LED A1
 #define SS A5 // default for Xenon, we can use any GPIO!
-
-byte tx_buffer[8] = {0x0B, 0x0E, 0x0E, 0x0F, 0x0C, 0x0A, 0x0F, 0x0E};
-byte rx_buffer[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
+#define OE D6 // Output Enable for Shift Register, drives parallel output pins when low, otherwise floating
+#define RCLK D5 // Latches in on rising edge
+#define SRCLR D4 // Clear parallel outputs when LOW
+byte tx_buffer[1] = {0xF0};
+byte rx_buffer[1] = {0x00};
 volatile bool transferComplete = false;
-volatile bool ledIsHigh = false;
-
 void setup() {
   SPI.begin(SS);
-  SPI.setClockSpeed(100, MHZ);
-  pinMode(LED, OUTPUT);
-  digitalWrite(LED, ledIsHigh);
+  SPI.setClockSpeed(40, MHZ);
+  SPI.setBitOrder(LSBFIRST);  // default is MSBFIRST
+  pinMode(OE, OUTPUT);
+  pinMode(RCLK, OUTPUT);
+  pinMode(SRCLR, OUTPUT);
+  digitalWrite(OE, HIGH);
+  digitalWrite(RCLK, LOW);
+  digitalWrite(SRCLR, HIGH);
 }
-
 void SPITransferComplete() {
   transferComplete = true;
 }
-
 void loop() {
-
   transferComplete = false;
-
   digitalWrite(SS, LOW);
+  digitalWrite(OE, HIGH); //outputs floating
+  digitalWrite(SRCLR, LOW); // clear the data
+  delayMicroseconds(20);
+  digitalWrite(SRCLR, HIGH); // turn off the clearing
+  digitalWrite(RCLK, LOW);
   SPI.transfer(tx_buffer, rx_buffer, sizeof(tx_buffer), SPITransferComplete);
   while (!transferComplete) {};
+  digitalWrite(RCLK, HIGH); // latch the serial input to the parallel lines
+  digitalWrite(OE, LOW); // outputs are pulled high or low as appropriate
   digitalWrite(SS, HIGH);
-
   delay(1000);
-  ledIsHigh = !ledIsHigh;
-  digitalWrite(LED, ledIsHigh);
-
 }
